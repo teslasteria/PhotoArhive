@@ -4,6 +4,10 @@ from app.main_window import PhotoArchiveApp
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    
+    # Устанавливаем стиль Fusion до создания основного окна
+    app.setStyle('Fusion')
+    
     window = PhotoArchiveApp()
     window.show()
-    sys.exit(app.exec())
+    app.exec()
