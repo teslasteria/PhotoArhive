@@ -1,4 +1,4 @@
-# Светлая тема
+# LIGHT theme
 light_stylesheet = """
     QWidget {
         background-color: #ffffff;
@@ -69,7 +69,7 @@ light_stylesheet = """
     }
 """
 
-# Тёмная тема
+# DARK theme
 dark_stylesheet = """
     QWidget {
         background-color: #2d2d2d;
@@ -139,3 +139,17 @@ dark_stylesheet = """
         border: 1px solid #4caf50;
     }
 """
+
+# PROGRESS BAR style
+progress_bar_style = """
+    QProgressBar {
+        border: 1px solid grey;
+        border-radius: 10px;
+        text-align: center;
+        background-color: #f0f0f0;
+    }
+    QProgressBar::chunk {
+        background-color: green;
+        width: 10px;
+    }
+""" 
