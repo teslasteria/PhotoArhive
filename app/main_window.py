@@ -279,6 +279,28 @@ class PhotoArchiveApp(QWidget):
             selected_formats.append('.raw')
         if self.nef_checkbox.isChecked():
             selected_formats.append('.nef')
+        if self.cr2_checkbox.isChecked():
+            selected_formats.append('.cr2')
+        if self.dng_checkbox.isChecked():
+            selected_formats.append('.dng')
+        if self.gif_checkbox.isChecked():
+            selected_formats.append('.gif')
+        if self.bmp_checkbox.isChecked():
+            selected_formats.append('.bmp')
+        if self.tiff_checkbox.isChecked():
+            selected_formats.append('.tiff')
+        if self.webp_checkbox.isChecked():
+            selected_formats.append('.webp')
+        if self.heic_checkbox.isChecked():
+            selected_formats.append('.heic')
+        if self.psd_checkbox.isChecked():
+            selected_formats.append('.psd')
+        if self.svg_checkbox.isChecked():
+            selected_formats.append('.svg')
+        if self.ico_checkbox.isChecked():
+            selected_formats.append('.ico')
+        if self.tga_checkbox.isChecked():
+            selected_formats.append('.tga')
         return selected_formats
 
     def start_sorting(self):
@@ -341,11 +363,17 @@ class PhotoArchiveApp(QWidget):
                                 os.makedirs(target_folder, exist_ok=True)
                                 img.close()
                                 os.rename(photo_path, os.path.join(target_folder, photo))
-                                # Обновляем лог перемещения файлов
                                 self.log_text_edit.append(f"Moved: {photo} -> {target_folder}")
                                 break
+                    else:
+                        # Если EXIF-данных нет, перемещаем в папку "Unknown"
+                        target_folder = os.path.join(self.target_dir, "Unknown")
+                        os.makedirs(target_folder, exist_ok=True)
+                        img.close()
+                        os.rename(photo_path, os.path.join(target_folder, photo))
+                        self.log_text_edit.append(f"Moved (No EXIF): {photo} -> {target_folder}")
                 except Exception as e:
-                    print(f'Error processing file {photo}: {e}')
+                    self.log_text_edit.append(f"Error processing file {photo}: {e}")
 
                 processed += 1
                 self.progress_bar.setValue(int((processed / total_photos) * 100))
