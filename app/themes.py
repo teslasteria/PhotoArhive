@@ -22,7 +22,7 @@ light_stylesheet = """
     }
     QProgressBar {
         border: 1px solid #cccccc;
-        border-radius: 4px;
+        border-radius: 5px;
         text-align: center;
         background-color: #f0f0f0;
     }
@@ -92,10 +92,10 @@ dark_stylesheet = """
         background-color: #5d5d5d;
     }
     QProgressBar {
-        border: 1px solid #555555;
-        border-radius: 4px;
+        border: 1px solid grey;
+        border-radius: 5px;
         text-align: center;
-        background-color: #3d3d3d;
+        background-color: #f0f0f0;
     }
     QProgressBar::chunk {
         background-color: #4caf50;
@@ -144,8 +144,12 @@ dark_stylesheet = """
 progress_bar_style = """
     QProgressBar {
         border: 1px solid grey;
-        border-radius: 5ыpx;
+        border-radius: 5px;
         text-align: center;
         background-color: #f0f0f0;
+    }
+    QProgressBar::chunk {
+        background-color: #4caf50;
+        border-radius: 4px;
     }
 """ 
