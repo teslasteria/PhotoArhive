@@ -144,12 +144,8 @@ dark_stylesheet = """
 progress_bar_style = """
     QProgressBar {
         border: 1px solid grey;
-        border-radius: 10px;
+        border-radius: 5ыpx;
         text-align: center;
         background-color: #f0f0f0;
-    }
-    QProgressBar::chunk {
-        background-color: green;
-        width: 10px;
     }
 """ 

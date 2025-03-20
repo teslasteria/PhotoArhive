@@ -1,13 +1,46 @@
 import os
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QFileDialog, QProgressBar, QLabel, QMenuBar, QMenu, QHBoxLayout, 
-    QApplication, QMessageBox
+    QWidget, 
+    QVBoxLayout, 
+    QPushButton, 
+    QFileDialog, 
+    QProgressBar, 
+    QLabel, 
+    QMenuBar, 
+    QMenu, 
+    QHBoxLayout, 
+    QApplication, 
+    QMessageBox, 
+    QCheckBox, 
+    QGroupBox,
+    QTextEdit,
+    QDialog,
+    QGridLayout
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from PIL import Image
 from PIL.ExifTags import TAGS
 from .themes import dark_stylesheet, light_stylesheet, progress_bar_style
+
+class FileInfoDialog(QDialog):
+    """Окно для отображения информации о файлах"""
+    def __init__(self, file_info, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("File Information")
+        self.setGeometry(200, 200, 400, 300)
+
+        layout = QVBoxLayout()
+        self.text_edit = QTextEdit()
+        self.text_edit.setReadOnly(True)
+        self.text_edit.setText(file_info)
+        layout.addWidget(self.text_edit)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.close)
+        layout.addWidget(close_button)
+
+        self.setLayout(layout)
 
 class PhotoArchiveApp(QWidget):
     def __init__(self):
@@ -21,6 +54,12 @@ class PhotoArchiveApp(QWidget):
         # default theme
         self.dark_theme = True
         self.setStyleSheet(dark_stylesheet)
+
+        # Режим работы кнопки: False - отбор файлов, True - сортировка
+        self.sorting_mode = False
+
+        #  list of selected file formats
+        self.selected_formats = []
 
     def initUI(self):
         self.setWindowTitle('PhotoArchive')
@@ -78,26 +117,107 @@ class PhotoArchiveApp(QWidget):
         # add menu to layout
         main_layout.setMenuBar(menubar)
 
-        # Container for buttons to choose directories
-        dir_buttons_layout = QHBoxLayout()
-        self.source_dir_btn = QPushButton('Select Source Directory', self)
+        # Контейнер для кнопок выбора директорий и меток
+        dir_buttons_layout = QVBoxLayout()
+
+        # Кнопка и метка для исходной директории
+        source_dir_layout = QHBoxLayout()
+        self.source_dir_btn = QPushButton(self.tr('Select Source Directory'), self)
         self.source_dir_btn.setIcon(QIcon('resources/folder_icon.png'))
         self.source_dir_btn.clicked.connect(self.select_source_directory)
-        dir_buttons_layout.addWidget(self.source_dir_btn)
+        self.source_dir_label = QLabel(self.tr('Source Directory: Not selected'), self)
+        self.source_dir_btn.setFixedWidth(200)
+        source_dir_layout.addWidget(self.source_dir_btn)
+        source_dir_layout.addWidget(self.source_dir_label)
+        dir_buttons_layout.addLayout(source_dir_layout)
 
-        self.target_dir_btn = QPushButton('Select Target Directory', self)
+        # Кнопка и метка для целевой директории
+        target_dir_layout = QHBoxLayout()
+        self.target_dir_btn = QPushButton(self.tr('Select Target Directory'), self)
         self.target_dir_btn.setIcon(QIcon('resources/folder_icon.png'))
         self.target_dir_btn.clicked.connect(self.select_target_directory)
-        dir_buttons_layout.addWidget(self.target_dir_btn)
+        self.target_dir_label = QLabel(self.tr('Target Directory: Not selected'), self)
+        self.target_dir_btn.setFixedWidth(200)
+        target_dir_layout.addWidget(self.target_dir_btn)
+        target_dir_layout.addWidget(self.target_dir_label)
+        dir_buttons_layout.addLayout(target_dir_layout)
 
         # Добавление контейнера с кнопками в основной layout
         main_layout.addLayout(dir_buttons_layout)
 
-        # Метки для отображения выбранных директорий
-        self.source_dir_label = QLabel('Source Directory: Not selected', self)
-        self.target_dir_label = QLabel('Target Directory: Not selected', self)
-        main_layout.addWidget(self.source_dir_label)
-        main_layout.addWidget(self.target_dir_label)
+        checkBox_and_log_output_layout = QHBoxLayout()
+
+        # Group for check boxes
+        formats_group = QGroupBox(self.tr('Select Formats to Sort'))
+        formats_layout = QGridLayout()
+
+        
+        # Чекбоксы для форматов
+        self.png_checkbox = QCheckBox('PNG')
+        self.jpg_checkbox = QCheckBox('JPG')
+        self.jpeg_checkbox = QCheckBox('JPEG')
+        self.raw_checkbox = QCheckBox('RAW')
+        self.nef_checkbox = QCheckBox('NEF')
+        self.cr2_checkbox = QCheckBox('CR2')  # Добавляем новые форматы
+        self.dng_checkbox = QCheckBox('DNG')
+        self.gif_checkbox = QCheckBox('GIF')
+        self.bmp_checkbox = QCheckBox('BMP')
+        self.tiff_checkbox = QCheckBox('TIFF')
+        self.webp_checkbox = QCheckBox('WEBP')
+        self.heic_checkbox = QCheckBox('HEIC/HEIF')
+        self.psd_checkbox = QCheckBox('PSD')
+        self.svg_checkbox = QCheckBox('SVG')
+        self.ico_checkbox = QCheckBox('ICO')
+        self.tga_checkbox = QCheckBox('TGA')
+
+        # Устанавливаем чекбоксы по умолчанию
+        self.png_checkbox.setChecked(True)
+        self.jpg_checkbox.setChecked(True)
+        self.jpeg_checkbox.setChecked(True)
+        self.raw_checkbox.setChecked(False)
+        self.nef_checkbox.setChecked(False)
+        self.cr2_checkbox.setChecked(False)  # По умолчанию новые форматы выключены
+        self.dng_checkbox.setChecked(False)
+        self.gif_checkbox.setChecked(False)
+        self.bmp_checkbox.setChecked(False)
+        self.tiff_checkbox.setChecked(False)
+        self.webp_checkbox.setChecked(False)
+        self.heic_checkbox.setChecked(False)
+        self.psd_checkbox.setChecked(False)
+        self.svg_checkbox.setChecked(False)
+        self.ico_checkbox.setChecked(False)
+        self.tga_checkbox.setChecked(False)
+
+        # Добавляем чекбоксы в QGridLayout (два столбца)
+        formats_layout.addWidget(self.png_checkbox, 0, 0)  # Строка 0, Столбец 0
+        formats_layout.addWidget(self.jpg_checkbox, 1, 0)  # Строка 1, Столбец 0
+        formats_layout.addWidget(self.jpeg_checkbox, 2, 0)  # Строка 2, Столбец 0
+        formats_layout.addWidget(self.raw_checkbox, 3, 0)  # Строка 3, Столбец 0
+        formats_layout.addWidget(self.nef_checkbox, 4, 0)  # Строка 4, Столбец 0
+        formats_layout.addWidget(self.cr2_checkbox, 5, 0)  # Строка 5, Столбец 0
+        formats_layout.addWidget(self.dng_checkbox, 6, 0)  # Строка 6, Столбец 0
+        formats_layout.addWidget(self.gif_checkbox, 7, 0)  # Строка 7, Столбец 0
+
+        formats_layout.addWidget(self.bmp_checkbox, 0, 1)  # Строка 0, Столбец 1
+        formats_layout.addWidget(self.tiff_checkbox, 1, 1)  # Строка 1, Столбец 1
+        formats_layout.addWidget(self.webp_checkbox, 2, 1)  # Строка 2, Столбец 1
+        formats_layout.addWidget(self.heic_checkbox, 3, 1)  # Строка 3, Столбец 1
+        formats_layout.addWidget(self.psd_checkbox, 4, 1)  # Строка 4, Столбец 1
+        formats_layout.addWidget(self.svg_checkbox, 5, 1)  # Строка 5, Столбец 1
+        formats_layout.addWidget(self.ico_checkbox, 6, 1)  # Строка 6, Столбец 1
+        formats_layout.addWidget(self.tga_checkbox, 7, 1)  # Строка 7, Столбец 1
+
+        formats_group.setFixedWidth(200)
+        formats_group.setLayout(formats_layout)
+        checkBox_and_log_output_layout.addWidget(formats_group)
+
+        # Добавляем QTextEdit для отображения перемещения файлов
+        self.log_text_edit = QTextEdit(self)
+        self.log_text_edit.setReadOnly(True)
+        self.log_text_edit.setPlaceholderText("File movement log will appear here...")
+        checkBox_and_log_output_layout.addWidget(self.log_text_edit)
+
+        main_layout.addLayout(checkBox_and_log_output_layout)
 
         # progress bar
         self.progress_bar = QProgressBar(self)
@@ -146,42 +266,93 @@ class PhotoArchiveApp(QWidget):
         else:
             self.target_dir_label.setText('Target Directory: Not selected')
 
+    def get_selected_formats(self):
+        """Получение выбранных форматов"""
+        selected_formats = []
+        if self.png_checkbox.isChecked():
+            selected_formats.append('.png')
+        if self.jpg_checkbox.isChecked():
+            selected_formats.append('.jpg')
+        if self.jpeg_checkbox.isChecked():
+            selected_formats.append('.jpeg')
+        if self.raw_checkbox.isChecked():
+            selected_formats.append('.raw')
+        if self.nef_checkbox.isChecked():
+            selected_formats.append('.nef')
+        return selected_formats
+
     def start_sorting(self):
         """Начало сортировки фотографий"""
         if not self.source_dir or not self.target_dir:
-            self.status_label.setText('Please select both source and target directories.')
+            self.status_label.setText(self.tr('Please select both source and target directories.'))
             return
 
-        self.status_label.setText('Sorting started...')
-        self.progress_bar.setValue(0)
+        if not self.sorting_mode:
+            # Режим отбора файлов
+            self.status_label.setText(self.tr('Scanning files...'))
+            self.progress_bar.setValue(0)
 
-        photos = [f for f in os.listdir(self.source_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif'))]
-        total_photos = len(photos)
-        processed = 0
+            # Получаем выбранные форматы
+            selected_formats = self.get_selected_formats()
 
-        for photo in photos:
-            photo_path = os.path.join(self.source_dir, photo)
-            try:
-                img = Image.open(photo_path)
-                exif_data = img._getexif()
-                if exif_data:
-                    for tag_id, value in exif_data.items():
-                        tag = TAGS.get(tag_id, tag_id)
-                        if tag == 'DateTime':
-                            date = value.split()[0].replace(':', '-')
-                            year, month, day = date.split('-')
-                            target_folder = os.path.join(self.target_dir, year, month, day)
-                            os.makedirs(target_folder, exist_ok=True)
-                            img.close()
-                            os.rename(photo_path, os.path.join(target_folder, photo))
-                            break
-            except Exception as e:
-                print(f'Error processing file {photo}: {e}')
+            # Фильтруем файлы по выбранным форматам
+            self.files_to_sort = [f for f in os.listdir(self.source_dir) if any(f.lower().endswith(ext) for ext in selected_formats)]
 
-            processed += 1
-            self.progress_bar.setValue(int((processed / total_photos) * 100))
+            # Подсчёт количества файлов каждого формата
+            format_counts = {}
+            for ext in selected_formats:
+                count = sum(1 for f in self.files_to_sort if f.lower().endswith(ext))
+                if count > 0:
+                    format_counts[ext] = count
 
-        self.status_label.setText('Sorting completed!')
+            # Отображение информации о файлах
+            file_info = "File Counts:\n"
+            for ext, count in format_counts.items():
+                file_info += f"{ext}: {count} files\n"
+
+            # Открываем окно с информацией
+            info_dialog = FileInfoDialog(file_info, self)
+            info_dialog.exec()
+
+            # Переключаем режим кнопки
+            self.sorting_mode = True
+            self.start_btn.setText("Confirm and Start Sorting")
+            self.status_label.setText(self.tr('Files scanned. Press "Confirm and Start Sorting" to begin.'))
+        else:
+            # Режим сортировки
+            self.status_label.setText(self.tr('Sorting started...'))
+            self.progress_bar.setValue(0)
+
+            total_photos = len(self.files_to_sort)
+            processed = 0
+
+            for photo in self.files_to_sort:
+                photo_path = os.path.join(self.source_dir, photo)
+                try:
+                    img = Image.open(photo_path)
+                    exif_data = img._getexif()
+                    if exif_data:
+                        for tag_id, value in exif_data.items():
+                            tag = TAGS.get(tag_id, tag_id)
+                            if tag == 'DateTime':
+                                date = value.split()[0].replace(':', '-')
+                                year, month, day = date.split('-')
+                                target_folder = os.path.join(self.target_dir, year, month, day)
+                                os.makedirs(target_folder, exist_ok=True)
+                                img.close()
+                                os.rename(photo_path, os.path.join(target_folder, photo))
+                                # Обновляем лог перемещения файлов
+                                self.log_text_edit.append(f"Moved: {photo} -> {target_folder}")
+                                break
+                except Exception as e:
+                    print(f'Error processing file {photo}: {e}')
+
+                processed += 1
+                self.progress_bar.setValue(int((processed / total_photos) * 100))
+
+            self.status_label.setText(self.tr('Sorting completed!'))
+            self.sorting_mode = False
+            self.start_btn.setText("Start Sorting")
 
     def clear(self):
         """Очистка выбранных директорий"""
