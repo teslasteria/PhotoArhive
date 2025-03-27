@@ -19,11 +19,11 @@
 
 ### Установка
 
-1. Клонируйте репозиторий:
+1. Склонируйте репозиторий:
 
    ```bash
-   git clone https://github.com/ваш-username/photo-sorter.git
-   cd photo-sorter
+   git clone https://github.com/teslasteria/PhotoArhive
+   cd PhotoArhive
    ```
 
 2. Установите зависимости:
@@ -63,6 +63,6 @@ pyinstaller --onefile --windowed main.py
 
 ## 📜 Лицензия
 
-Этот проект открыт под лицензией **MIT**. Подробнее в файле [LICENSE](LICENSE).
+Этот проект открыт под лицензией **MIT**. Подробнее в файле [LICENSE](https://opensource.org/license/MIT).
 
 ---
