@@ -22,25 +22,7 @@ from PyQt6.QtGui import QIcon
 from PIL import Image
 from PIL.ExifTags import TAGS
 from .themes import dark_stylesheet, light_stylesheet, progress_bar_style
-
-class FileInfoDialog(QDialog):
-    """Окно для отображения информации о файлах"""
-    def __init__(self, file_info, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("File Information")
-        self.setGeometry(200, 200, 400, 300)
-
-        layout = QVBoxLayout()
-        self.text_edit = QTextEdit()
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setText(file_info)
-        layout.addWidget(self.text_edit)
-
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(self.close)
-        layout.addWidget(close_button)
-
-        self.setLayout(layout)
+from .infoDialog import FileInfoDialog
 
 class PhotoArchiveApp(QWidget):
     def __init__(self):
@@ -81,27 +63,12 @@ class PhotoArchiveApp(QWidget):
         # Edit section
         edit_menu = menubar.addMenu('Edit')
 
-        # Undo
-        undo_action = edit_menu.addAction('Undo')
-        undo_action.triggered.connect(self.undo)
-
-        # Redo
-        redo_action = edit_menu.addAction('Redo')
-        redo_action.triggered.connect(self.redo)
-
         # Clear
         clear_action = edit_menu.addAction('Clear')
         clear_action.triggered.connect(self.clear)
 
         # Preferences section
         preferences_menu = menubar.addMenu('Preferences')
-
-        # Language
-        language_menu = preferences_menu.addMenu('Language')
-        english_action = language_menu.addAction('English')
-        english_action.triggered.connect(lambda: self.set_language('English'))
-        russian_action = language_menu.addAction('Russian')
-        russian_action.triggered.connect(lambda: self.set_language('Russian'))
 
         # Reset Settings
         reset_action = preferences_menu.addAction('Reset Settings')
@@ -150,15 +117,14 @@ class PhotoArchiveApp(QWidget):
         # Group for check boxes
         formats_group = QGroupBox(self.tr('Select Formats to Sort'))
         formats_layout = QGridLayout()
-
         
-        # Чекбоксы для форматов
+        # checkBoxes
         self.png_checkbox = QCheckBox('PNG')
         self.jpg_checkbox = QCheckBox('JPG')
         self.jpeg_checkbox = QCheckBox('JPEG')
         self.raw_checkbox = QCheckBox('RAW')
         self.nef_checkbox = QCheckBox('NEF')
-        self.cr2_checkbox = QCheckBox('CR2')  # Добавляем новые форматы
+        self.cr2_checkbox = QCheckBox('CR2')
         self.dng_checkbox = QCheckBox('DNG')
         self.gif_checkbox = QCheckBox('GIF')
         self.bmp_checkbox = QCheckBox('BMP')
@@ -170,13 +136,13 @@ class PhotoArchiveApp(QWidget):
         self.ico_checkbox = QCheckBox('ICO')
         self.tga_checkbox = QCheckBox('TGA')
 
-        # Устанавливаем чекбоксы по умолчанию
+        # default checkBoxes
         self.png_checkbox.setChecked(True)
         self.jpg_checkbox.setChecked(True)
         self.jpeg_checkbox.setChecked(True)
         self.raw_checkbox.setChecked(False)
         self.nef_checkbox.setChecked(False)
-        self.cr2_checkbox.setChecked(False)  # По умолчанию новые форматы выключены
+        self.cr2_checkbox.setChecked(False)
         self.dng_checkbox.setChecked(False)
         self.gif_checkbox.setChecked(False)
         self.bmp_checkbox.setChecked(False)
@@ -189,23 +155,23 @@ class PhotoArchiveApp(QWidget):
         self.tga_checkbox.setChecked(False)
 
         # Добавляем чекбоксы в QGridLayout (два столбца)
-        formats_layout.addWidget(self.png_checkbox, 0, 0)  # Строка 0, Столбец 0
-        formats_layout.addWidget(self.jpg_checkbox, 1, 0)  # Строка 1, Столбец 0
-        formats_layout.addWidget(self.jpeg_checkbox, 2, 0)  # Строка 2, Столбец 0
-        formats_layout.addWidget(self.raw_checkbox, 3, 0)  # Строка 3, Столбец 0
-        formats_layout.addWidget(self.nef_checkbox, 4, 0)  # Строка 4, Столбец 0
-        formats_layout.addWidget(self.cr2_checkbox, 5, 0)  # Строка 5, Столбец 0
-        formats_layout.addWidget(self.dng_checkbox, 6, 0)  # Строка 6, Столбец 0
-        formats_layout.addWidget(self.gif_checkbox, 7, 0)  # Строка 7, Столбец 0
+        formats_layout.addWidget(self.png_checkbox, 0, 0)
+        formats_layout.addWidget(self.jpg_checkbox, 1, 0)
+        formats_layout.addWidget(self.jpeg_checkbox, 2, 0)
+        formats_layout.addWidget(self.raw_checkbox, 3, 0)
+        formats_layout.addWidget(self.nef_checkbox, 4, 0)
+        formats_layout.addWidget(self.cr2_checkbox, 5, 0)
+        formats_layout.addWidget(self.dng_checkbox, 6, 0)
+        formats_layout.addWidget(self.gif_checkbox, 7, 0)
 
-        formats_layout.addWidget(self.bmp_checkbox, 0, 1)  # Строка 0, Столбец 1
-        formats_layout.addWidget(self.tiff_checkbox, 1, 1)  # Строка 1, Столбец 1
-        formats_layout.addWidget(self.webp_checkbox, 2, 1)  # Строка 2, Столбец 1
-        formats_layout.addWidget(self.heic_checkbox, 3, 1)  # Строка 3, Столбец 1
-        formats_layout.addWidget(self.psd_checkbox, 4, 1)  # Строка 4, Столбец 1
-        formats_layout.addWidget(self.svg_checkbox, 5, 1)  # Строка 5, Столбец 1
-        formats_layout.addWidget(self.ico_checkbox, 6, 1)  # Строка 6, Столбец 1
-        formats_layout.addWidget(self.tga_checkbox, 7, 1)  # Строка 7, Столбец 1
+        formats_layout.addWidget(self.bmp_checkbox, 0, 1)
+        formats_layout.addWidget(self.tiff_checkbox, 1, 1)
+        formats_layout.addWidget(self.webp_checkbox, 2, 1)
+        formats_layout.addWidget(self.heic_checkbox, 3, 1) 
+        formats_layout.addWidget(self.psd_checkbox, 4, 1)
+        formats_layout.addWidget(self.svg_checkbox, 5, 1)
+        formats_layout.addWidget(self.ico_checkbox, 6, 1)
+        formats_layout.addWidget(self.tga_checkbox, 7, 1)  
 
         formats_group.setFixedWidth(200)
         formats_group.setLayout(formats_layout)
@@ -399,16 +365,6 @@ class PhotoArchiveApp(QWidget):
         else:
             self.setStyleSheet(light_stylesheet)
 
-    def undo(self):
-        """Отмена последнего действия"""
-        # Пример: можно добавить историю действий и отмену
-        QMessageBox.information(self, 'Undo', 'Undo last action.')
-
-    def redo(self):
-        """Повтор последнего отменённого действия"""
-        # Пример: можно добавить историю действий и повтор
-        QMessageBox.information(self, 'Redo', 'Redo last undone action.')
-
     def clear(self):
         """Очистка выбранных директорий"""
         self.source_dir = None
@@ -422,11 +378,6 @@ class PhotoArchiveApp(QWidget):
         """Открытие окна настроек"""
         # Пример: можно открыть диалоговое окно с настройками
         QMessageBox.information(self, 'Preferences', 'Open preferences dialog.')
-
-    def set_language(self, language):
-        """Установка языка интерфейса"""
-        # Пример: можно добавить поддержку нескольких языков
-        QMessageBox.information(self, 'Language', f'Language set to {language}.')
 
     def reset_settings(self):
         """Сброс настроек к значениям по умолчанию"""
