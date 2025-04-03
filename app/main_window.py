@@ -17,12 +17,13 @@ from PyQt6.QtWidgets import (
     QDialog,
     QGridLayout
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTranslator, QLocale
 from PyQt6.QtGui import QIcon
 from PIL import Image
 from PIL.ExifTags import TAGS
 from .themes import dark_stylesheet, light_stylesheet, progress_bar_style
 from .infoDialog import FileInfoDialog
+from .translations import TranslationManager
 
 class PhotoArchiveApp(QWidget):
     def __init__(self):
@@ -32,6 +33,8 @@ class PhotoArchiveApp(QWidget):
         QApplication.setStyle('Fusion')
 
         self.initUI()
+
+        self.translation_manager = TranslationManager(QApplication.instance())
 
         # default theme
         self.dark_theme = True
@@ -54,7 +57,7 @@ class PhotoArchiveApp(QWidget):
 
         # Menu
         menubar = QMenuBar(self)
-        file_menu = menubar.addMenu('File')
+        file_menu = menubar.addMenu(self.tr('File'))
 
         # Exit
         exit_action = file_menu.addAction('Exit')
@@ -62,6 +65,26 @@ class PhotoArchiveApp(QWidget):
 
         # Edit section
         edit_menu = menubar.addMenu('Edit')
+
+        # Добавляем меню Language в Edit
+        self.language_menu = edit_menu.addMenu('Language')
+        
+        # Создаем действия для языков
+        self.english_action = self.language_menu.addAction('English')
+        self.russian_action = self.language_menu.addAction('Русский')
+        self.french_action = self.language_menu.addAction('Français')
+        self.german_action = self.language_menu.addAction('Deutsch')
+        self.spanish_action = self.language_menu.addAction('Español')
+        
+        # Подключаем сигналы
+        self.english_action.triggered.connect(lambda: self.change_language('en'))
+        self.russian_action.triggered.connect(lambda: self.change_language('ru'))
+        self.french_action.triggered.connect(lambda: self.change_language('fr'))
+        self.german_action.triggered.connect(lambda: self.change_language('de'))
+        self.spanish_action.triggered.connect(lambda: self.change_language('es'))
+
+        # Инициализируем менеджер переводов
+        self.translation_manager = TranslationManager(QApplication.instance())  
 
         # Clear
         clear_action = edit_menu.addAction('Clear')
@@ -384,3 +407,22 @@ class PhotoArchiveApp(QWidget):
         self.dark_theme = False
         self.setStyleSheet(light_stylesheet)
         QMessageBox.information(self, 'Reset Settings', 'Settings reset to default.')
+
+    def change_language(self, language_code):
+        """Изменение языка интерфейса"""
+        if self.translation_manager.load_translation(language_code):
+            self.retranslateUi()
+            # Принудительное обновление всех виджетов
+            for widget in QApplication.allWidgets():
+                widget.update()
+
+    def retranslateUi(self):
+        """Обновление всех текстовых элементов"""
+        # Здесь нужно обновить все тексты в интерфейсе
+        self.setWindowTitle(self.tr('PhotoArchive'))
+        self.source_dir_btn.setText(self.tr('Select Source Directory'))
+        self.source_dir_label.setText(self.tr('Source Directory: Not selected'))
+        self.target_dir_btn.setText(self.tr('Select Target Directory'))
+        self.target_dir_label.setText(self.tr('Target Directory: Not selected'))
+        self.start_btn.setText(self.tr('Start Sorting'))
+        self.status_label.setText(self.tr('Ready to start'))
