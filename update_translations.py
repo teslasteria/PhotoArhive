@@ -11,15 +11,15 @@ def update_translations():
     
     # Создаем .ts файлы
     for lang in languages:
-        cmd = f"pylupdate6 --verbose {' '.join(sources)} -ts translations/photoarchive_{lang}.ts"
+        cmd = f"pylupdate6 --verbose {' '.join(sources)} -ts app/translations/photoarchive_{lang}.ts"
         subprocess.run(cmd, shell=True)
     
     print("Translation files created. Now you can edit them with Qt Linguist.")
 
 def compile_translations():
-    languages = 'ru '#['ru', 'fr', 'de', 'es']
+    languages = ['ru', 'fr', 'de', 'es']
     for lang in languages:
-        cmd = f"lrelease translations/photoarchive_{lang}.ts"
+        cmd = f'/usr/lib/qt6/bin/lrelease app/translations/photoarchive_{lang}.ts -qm app/translations/photoarchive_{lang}.ts'
         subprocess.run(cmd, shell=True)
     
     print("Translations compiled to .qm files.")
@@ -27,4 +27,4 @@ def compile_translations():
 if __name__ == '__main__':
     update_translations()
     # После редактирования файлов в Qt Linguist, раскомментируйте следующую строку:
-    compile_translations()
+    # compile_translations()

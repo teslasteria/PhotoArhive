@@ -37,8 +37,8 @@ class PhotoArchiveApp(QWidget):
         self.translation_manager = TranslationManager(QApplication.instance())
 
         # default theme
-        self.dark_theme = True
-        self.setStyleSheet(dark_stylesheet)
+        self.dark_theme = False
+        self.setStyleSheet(light_stylesheet)
 
         # Режим работы кнопки: False - отбор файлов, True - сортировка
         self.sorting_mode = False
@@ -77,7 +77,7 @@ class PhotoArchiveApp(QWidget):
         self.spanish_action = self.language_menu.addAction('Español')
         
         # Подключаем сигналы
-        self.english_action.triggered.connect(lambda: self.change_language('en'))
+        self.english_action.triggered.connect(self.resetLanguageToEnglish)
         self.russian_action.triggered.connect(lambda: self.change_language('ru'))
         self.french_action.triggered.connect(lambda: self.change_language('fr'))
         self.german_action.triggered.connect(lambda: self.change_language('de'))
@@ -248,15 +248,13 @@ class PhotoArchiveApp(QWidget):
             self.source_dir_label.setText('Source Directory: Not selected')
 
     def select_target_directory(self):
-        """Выбор целевой директории"""
-        self.target_dir = QFileDialog.getExistingDirectory(self, 'Select Target Directory')
+        self.target_dir = QFileDialog.getExistingDirectory(self, self.tr('Select Target Directory'))
         if self.target_dir:
-            self.target_dir_label.setText(f'Target Directory: {self.target_dir}')
+            self.target_dir_label.setText(self.tr('Target Directory: ') + self.target_dir)
         else:
-            self.target_dir_label.setText('Target Directory: Not selected')
+            self.target_dir_label.setText(self.tr('Target Directory: Not selected'))
 
     def get_selected_formats(self):
-        """Получение выбранных форматов"""
         selected_formats = []
         if self.png_checkbox.isChecked():
             selected_formats.append('.png')
@@ -317,7 +315,7 @@ class PhotoArchiveApp(QWidget):
                     format_counts[ext] = count
 
             # Отображение информации о файлах
-            file_info = "File Counts:\n"
+            file_info = self.tr("File Counts:\n")
             for ext, count in format_counts.items():
                 file_info += f"{ext}: {count} files\n"
 
@@ -327,7 +325,7 @@ class PhotoArchiveApp(QWidget):
 
             # Переключаем режим кнопки
             self.sorting_mode = True
-            self.start_btn.setText("Confirm and Start Sorting")
+            self.start_btn.setText(self.tr("Confirm and Start Sorting"))
             self.status_label.setText(self.tr('Files scanned. Press "Confirm and Start Sorting" to begin.'))
         else:
             # Режим сортировки
@@ -369,33 +367,22 @@ class PhotoArchiveApp(QWidget):
 
             self.status_label.setText(self.tr('Sorting completed!'))
             self.sorting_mode = False
-            self.start_btn.setText("Start Sorting")
+            self.start_btn.setText(self.tr("Start Sorting"))
 
     def clear(self):
-        """Очистка выбранных директорий"""
         self.source_dir = None
         self.target_dir = None
-        self.source_dir_label.setText('Source Directory: Not selected')
-        self.target_dir_label.setText('Target Directory: Not selected')
-        self.status_label.setText('Ready to start')
+        self.source_dir_label.setText(self.tr('Source Directory: Not selected'))
+        self.target_dir_label.setText(self.tr('Target Directory: Not selected'))
+        self.status_label.setText(self.tr('Ready to start'))
         self.progress_bar.setValue(0)
 
     def toggle_theme(self):
-        """Переключение между светлой и тёмной темами"""
         self.dark_theme = not self.dark_theme
         if self.dark_theme:
             self.setStyleSheet(dark_stylesheet)
         else:
             self.setStyleSheet(light_stylesheet)
-
-    def clear(self):
-        """Очистка выбранных директорий"""
-        self.source_dir = None
-        self.target_dir = None
-        self.source_dir_label.setText('Source Directory: Not selected')
-        self.target_dir_label.setText('Target Directory: Not selected')
-        self.status_label.setText('Ready to start')
-        self.progress_bar.setValue(0)
 
     def open_preferences(self):
         """Открытие окна настроек"""
@@ -403,13 +390,53 @@ class PhotoArchiveApp(QWidget):
         QMessageBox.information(self, 'Preferences', 'Open preferences dialog.')
 
     def reset_settings(self):
-        """Сброс настроек к значениям по умолчанию"""
+        # 1. Сброс темы
         self.dark_theme = False
         self.setStyleSheet(light_stylesheet)
-        QMessageBox.information(self, 'Reset Settings', 'Settings reset to default.')
+        
+        # 2. Сброс языка (удаление всех переводов)
+        self.resetLanguageToEnglish()
+        
+        # 3. Обновление интерфейса
+        self.retranslateUi()
+        
+        # 4. Сброс других настроек (чекбоксы и т.д.)
+        self.reset_checkboxes()
+        
+        # 5. Уведомление
+        QMessageBox.information(
+            self,
+            'Reset Settings',  # Без self.tr(), так как это английский по умолчанию
+            'All settings have been reset to default.'
+        )
+
+    def reset_checkboxes(self):
+        self.png_checkbox.setChecked(True)
+        self.jpg_checkbox.setChecked(True)
+        self.jpeg_checkbox.setChecked(True)
+        self.raw_checkbox.setChecked(False)
+        self.nef_checkbox.setChecked(False)
+        self.cr2_checkbox.setChecked(False)
+        self.dng_checkbox.setChecked(False)
+        self.gif_checkbox.setChecked(False)
+        self.bmp_checkbox.setChecked(False)
+        self.tiff_checkbox.setChecked(False)
+        self.webp_checkbox.setChecked(False)
+        self.heic_checkbox.setChecked(False)
+        self.psd_checkbox.setChecked(False)
+        self.svg_checkbox.setChecked(False)
+        self.ico_checkbox.setChecked(False)
+        self.tga_checkbox.setChecked(False)
+
+    def resetLanguageToEnglish(self):
+        QApplication.instance().removeTranslator(self.translation_manager.app_translator)
+        QApplication.instance().removeTranslator(self.translation_manager.qt_translator)
+        QLocale.setDefault(QLocale('en'))
+        self.retranslateUi()    
+
+        print("English reset called!")
 
     def change_language(self, language_code):
-        """Изменение языка интерфейса"""
         if self.translation_manager.load_translation(language_code):
             self.retranslateUi()
             # Принудительное обновление всех виджетов
@@ -417,8 +444,6 @@ class PhotoArchiveApp(QWidget):
                 widget.update()
 
     def retranslateUi(self):
-        """Обновление всех текстовых элементов"""
-        # Здесь нужно обновить все тексты в интерфейсе
         self.setWindowTitle(self.tr('PhotoArchive'))
         self.source_dir_btn.setText(self.tr('Select Source Directory'))
         self.source_dir_label.setText(self.tr('Source Directory: Not selected'))
