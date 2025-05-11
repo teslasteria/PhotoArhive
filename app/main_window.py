@@ -49,8 +49,9 @@ class PhotoArchiveApp(QWidget):
         # Size and position
         self.setGeometry(100, 100, 1200, 600)  
 
-        # App logo
-        self.setWindowIcon(QIcon('resources/app_icon.png'))
+        # App logo - using os.path.join for proper path handling
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resourses', 'icon.png')
+        self.setWindowIcon(QIcon(icon_path))
 
         # Menu
         menubar = QMenuBar(self)
@@ -356,6 +357,7 @@ class PhotoArchiveApp(QWidget):
         self.target_dir_label.setText('Target Directory: Not selected')
         self.status_label.setText('Ready to start')
         self.progress_bar.setValue(0)
+        self.log_text_edit.clear()
 
     def toggle_theme(self):
         """Переключение между светлой и тёмной темами"""
@@ -364,15 +366,6 @@ class PhotoArchiveApp(QWidget):
             self.setStyleSheet(dark_stylesheet)
         else:
             self.setStyleSheet(light_stylesheet)
-
-    def clear(self):
-        """Очистка выбранных директорий"""
-        self.source_dir = None
-        self.target_dir = None
-        self.source_dir_label.setText('Source Directory: Not selected')
-        self.target_dir_label.setText('Target Directory: Not selected')
-        self.status_label.setText('Ready to start')
-        self.progress_bar.setValue(0)
 
     def open_preferences(self):
         """Открытие окна настроек"""
