@@ -295,9 +295,13 @@ class PhotoArchiveApp(QWidget):
                     format_counts[ext] = count
 
             # Отображение информации о файлах
-            file_info = "File Counts:\n"
-            for ext, count in format_counts.items():
-                file_info += f"{ext}: {count} files\n"
+            if count == 0:
+                file_info = 'No files to sort'
+                
+            else:
+                file_info = "File Counts:\n"
+                for ext, count in format_counts.items():
+                    file_info += f"{ext}: {count} files\n"
 
             # Открываем окно с информацией
             info_dialog = FileInfoDialog(file_info, self)
